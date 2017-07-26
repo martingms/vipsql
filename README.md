@@ -1,12 +1,6 @@
-```
-       _                 _
-__   _(_)_ __  ___  __ _| |
-\ \ / / | '_ \/ __|/ _` | |
- \ V /| | |_) \__ \ (_| | |
-  \_/ |_| .__/|___/\__, |_|
-        |_|           |_|
+# vipsql
 
-```
+A vim-plugin for interacting with psql
 
 ## Demo
 
@@ -14,26 +8,23 @@ TODO INSERT SCREENCAST HERE
 
 ## Install
 
-Note that `vipsql` uses the vim channels feature, so your vim must be at
+### With [Pathogen](https://github.com/tpope/vim-pathogen):
+
+    $ cd ~/.vim/bundle && git clone https://github.com/martingms/vipsql
+
+Note that vipsql uses the vim channels feature, so your vim must be at
 least version 8, and compiled with `+channel`. To test whether you're compatible, run:
 
     $ vim --version | grep -o +channel
 
 If the output is `+channel` you should be good to go.
 
-Please also note that sending an interrupt (`SIGINT`) to `psql` (for example to
-cancel a long running query) results in killing the channel in versions of `vim`
-older than TODO VERSION due to a bug (fixed in TODO URL).
+Please also note that sending an interrupt (`SIGINT`) to psql (for example to
+cancel a long running query) results in killing the channel in versions of vim
+older than `8.0.0588` due to a bug.
 
-There is currently no support for neovim, but patches are accepted :)
-
-### With [Pathogen](https://github.com/tpope/pathogen):
-
-    $ git clone yadda yadda TODO
-
-### Manually
-
-    $ wget && unzip TODO
+There is currently no support for neovim, and the code is probably horribly
+nonidiomatic, but patches accepted :)
 
 ## Configure
 
