@@ -123,13 +123,3 @@ command -range=% VipsqlSendSelection call s:Send(s:GetVisualSelection())
 command -range=% VipsqlSendRange <line1>,<line2>call s:SendRange()
 command VipsqlSendBuffer call s:Send(join(getline(1, '$'), "\n"))
 command VipsqlSendInterrupt call s:SendSignal("int")
-
-" Keybindings
-noremap <unique> <silent> <leader>po :VipsqlOpenSession<CR>
-noremap <unique> <silent> <leader>pk :VipsqlCloseSession<CR>
-nnoremap <unique> <silent> <leader>ps :VipsqlShell<CR>
-vnoremap <unique> <silent> <leader>ps :VipsqlSendSelection<CR>
-noremap <unique> <silent> <leader>pr :VipsqlSendRange<CR>
-noremap <unique> <silent> <leader>pl :VipsqlSendCurrentLine<CR>
-noremap <unique> <silent> <leader>pb :VipsqlSendBuffer<CR>
-noremap <unique> <silent> <leader>pc :VipsqlSendInterrupt<CR>

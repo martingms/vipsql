@@ -33,10 +33,30 @@ nonidiomatic, but patches accepted :)
 Put the following in your `.vimrc` (and customize bindings to your liking):
 
 ```
-let send_buffer = something;
-let send_line = something;
-let send_vip = something;
-let send_selection = something;
+" Starts an async psql job, prompting for the psql arguments.
+" Also opens a scratch buffer where output from psql is directed.
+noremap <leader>po :VipsqlOpenSession<CR>
+
+" Terminates psql (happens automatically if the scratch buffer is closed).
+noremap <silent> <leader>pk :VipsqlCloseSession<CR>
+
+" In normal-mode, prompts for input to psql directly.
+nnoremap <leader>ps :VipsqlShell<CR>
+
+" In visual-mode, sends the selected text to psql.
+vnoremap <leader>ps :VipsqlSendSelection<CR>
+
+" Sends the selected _range_ to psql.
+noremap <leader>pr :VipsqlSendRange<CR>
+
+" Sends the current line to psql.
+noremap <leader>pl :VipsqlSendCurrentLine<CR>
+
+" Sends the entire current buffer to psql.
+noremap <leader>pb :VipsqlSendBuffer<CR>
+
+" Sends `SIGINT` (C-c) to the psql process.
+noremap <leader>pc :VipsqlSendInterrupt<CR>
 ```
 
 ### Options
