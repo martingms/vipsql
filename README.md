@@ -4,7 +4,7 @@ A vim-plugin for interacting with psql
 
 ## Demo
 
-TODO INSERT SCREENCAST HERE
+[![asciicast demo](https://asciinema.org/a/HTc1gAS2gHxaL7yCECvwKUUPs.png)](https://asciinema.org/a/HTc1gAS2gHxaL7yCECvwKUUPs)
 
 ## Install
 
