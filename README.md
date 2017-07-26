@@ -8,9 +8,26 @@ A vim-plugin for interacting with psql
 
 ## Install
 
-### With [Pathogen](https://github.com/tpope/vim-pathogen):
+### With [Pathogen](https://github.com/tpope/vim-pathogen)
 
     $ cd ~/.vim/bundle && git clone https://github.com/martingms/vipsql
+
+### As a terminal command
+
+To use vipsql in a manner similar to psql, add something like this to your
+`.bashrc` or similar:
+
+    function vipsql {
+        vim -c 'setlocal buftype=nofile | VipsqlOpenSession '$@
+    }
+
+All args are redirected to the psql session, so e.g.
+
+    $ vipsql -d test
+
+will start vim with vipsql already connected to the database `test`.
+
+### Notes
 
 Note that vipsql uses the vim channels feature, so your vim must be at
 least version 8, and compiled with `+channel`. To test whether you're compatible, run:
