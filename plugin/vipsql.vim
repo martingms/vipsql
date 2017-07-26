@@ -31,7 +31,7 @@ function! s:OpenSession(...)
     end
 
     " TODO: Is exec needed here?
-    exec "autocmd BufUnload <buffer=" . s:bufnr . "> call s:CloseSession()"
+    exec "autocmd BufUnload <buffer=" . s:bufnr . "> call s:OutputBufferClosed()"
 
     let job_opts = {
         \"mode": "raw",
@@ -53,6 +53,11 @@ function! s:CloseSession()
 
     call s:SendSignal("term")
     unlet s:session
+endfunction
+
+function! s:OutputBufferClosed()
+    call s:CloseSession()
+    unlet s:bufnr
 endfunction
 
 function! s:Send(text)
