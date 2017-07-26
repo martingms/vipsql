@@ -42,8 +42,6 @@ function! s:OpenSession(...)
     \}
 
     let s:session = job_start(cmd, job_opts)
-
-    echo "\nSession opened with: " . cmd
 endfunction
 
 function! s:CloseSession()
