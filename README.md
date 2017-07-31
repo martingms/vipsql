@@ -90,3 +90,7 @@ let g:vipsql_shell_prompt = "> "
 " What `vim` command to use when opening the scratch buffer
 let g:vipsql_new_buffer_cmd = "rightbelow split"
 ```
+
+## License
+
+Copyright (c) Martin Gammelsæter. Distributed under the same terms as Vim itself. See `:help license`.
