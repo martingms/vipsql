@@ -18,7 +18,7 @@ To use vipsql in a manner similar to psql, add something like this to your
 `.bashrc` or similar:
 
     function vipsql {
-        vim -c 'setlocal buftype=nofile | VipsqlOpenSession '$@
+        vim -c 'setlocal buftype=nofile | setlocal ft=sql | VipsqlOpenSession '$@
     }
 
 All args are redirected to the psql session, so e.g.
