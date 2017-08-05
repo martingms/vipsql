@@ -16,9 +16,21 @@ if !exists("g:vipsql_new_buffer_cmd")
     let g:vipsql_new_buffer_cmd = "rightbelow split"
 end
 
+if !exists("g:vipsql_log_prefix")
+    let g:vipsql_log_prefix = "vipsql: "
+end
+
+function s:Log(msg)
+    echomsg g:vipsql_log_prefix . a:msg
+endfunction
+
+function s:Err(msg)
+    echoerr g:vipsql_log_prefix . a:msg
+endfunction
+
 function! s:OpenSession(...)
     if exists("s:session")
-        echo "Session already open. Use :VipsqlCloseSession to close it."
+        call s:Log("Session already open. Use :VipsqlCloseSession to close it.")
         return
     end
 
