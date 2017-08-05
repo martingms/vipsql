@@ -91,6 +91,10 @@ let g:vipsql_shell_prompt = "> "
 
 " What `vim` command to use when opening the scratch buffer
 let g:vipsql_new_buffer_cmd = "rightbelow split"
+
+" Whether or not the vipsql-buffer should automatically scroll to the bottom
+" on new input.
+let g:vipsql_auto_scroll_enabled = 1
 ```
 
 ## License

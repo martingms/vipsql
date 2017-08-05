@@ -20,6 +20,10 @@ if !exists("g:vipsql_log_prefix")
     let g:vipsql_log_prefix = "vipsql: "
 end
 
+if !exists("g:vipsql_auto_scroll_enabled")
+    let g:vipsql_auto_scroll_enabled = 1
+end
+
 function s:Log(msg)
     echomsg g:vipsql_log_prefix . a:msg
 endfunction
@@ -61,7 +65,9 @@ function! s:OnOutput(job_id, data, event_type)
     exe "normal! GA" . a:data[0]
     call append(line('$'), a:data[1:])
 
-    " TODO: Add option for autoscroll
+    if g:vipsql_auto_scroll_enabled
+        exe "normal! G"
+    endif
 
     " Change back to wherever we came from.
     wincmd p
