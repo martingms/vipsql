@@ -66,7 +66,7 @@ function! s:OnOutput(job_id, data, event_type)
     call append(line('$'), a:data[1:])
 
     if g:vipsql_auto_scroll_enabled
-        exe "normal! G"
+        normal! G
     endif
 
     " Change back to wherever we came from.
