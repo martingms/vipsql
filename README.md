@@ -40,8 +40,10 @@ Please also note that sending an interrupt (`SIGINT`) to psql (for example to
 cancel a long running query) results in killing the channel in versions of vim
 older than `8.0.0588` due to a bug.
 
-There is currently no support for neovim, and the code is probably horribly
-nonidiomatic, but patches accepted :)
+Neovim should be supported, but I have not had the chance to test it, so please
+let me know if you are a neovim user and can confirm. One thing that definitely
+does not work for neovim is to send `SIGINT`, as there doesn't seem to be any
+support for sending arbitrary signals through neovim's job api yet.
 
 ## Configure
 
