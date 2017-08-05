@@ -10,6 +10,7 @@ let s:jobs = {} " { job, opts, type: 'vimjob|nvimjob'}
 let s:job_type_nvimjob = 'nvimjob'
 let s:job_type_vimjob = 'vimjob'
 let s:job_error_unsupported_job_type = -2 " unsupported job type
+let s:job_error_unsupported_signal_type = -3
 
 function! s:job_supported_types() abort
     let l:supported_types = []
@@ -165,6 +166,19 @@ function! s:job_send(jobid, data) abort
     endif
 endfunction
 
+function! s:job_send_signal(jobid, signal) abort
+    let l:jobinfo = s:jobs[a:jobid]
+    if l:jobinfo.type == s:job_type_nvimjob
+        if a:signal == 'term'
+            call jobstop(a:jobid)
+        else
+            return s:job_error_unsupported_signal_type
+        endif
+    elseif l:jobinfo.type == s:job_type_vimjob
+        call job_stop(l:jobinfo.job, a:signal)
+    endif
+endfunction
+
 function! s:job_wait_single(jobid, timeout, start) abort
     if !has_key(s:jobs, a:jobid)
         return -3
@@ -217,6 +231,10 @@ endfunction
 
 function! job#send(jobid, data) abort
     call s:job_send(a:jobid, a:data)
+endfunction
+
+function! job#send_signal(jobid, signal) abort
+    call s:job_send_signal(a:jobid, a:signal)
 endfunction
 
 function! job#wait(jobids, ...) abort
