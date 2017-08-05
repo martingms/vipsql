@@ -42,18 +42,37 @@ function! s:OpenSession(...)
         let s:bufnr = s:NewBuffer("__vipsql__")
     end
 
-    " TODO: Is exec needed here?
     exec "autocmd BufUnload <buffer=" . s:bufnr . "> call s:OutputBufferClosed()"
 
     let job_opts = {
-        \"mode": "raw",
-        \"out_io": "buffer",
-        \"out_buf": s:bufnr,
-        \"err_io": "buffer",
-        \"err_buf": s:bufnr,
+        \"on_stdout": function("s:OnOutput"),
+        \"on_stderr": function("s:OnOutput"),
+        \"on_exit": function("s:OnExit"),
     \}
 
-    let s:session = job_start(cmd, job_opts)
+    let s:session = job#start(cmd, job_opts)
+endfunction
+
+function! s:OnOutput(job_id, data, event_type)
+    " Change to output buffer
+    exe s:bufnr . "wincmd p"
+
+    " Write data
+    exe "normal! GA" . a:data[0]
+    call append(line('$'), a:data[1:])
+
+    " TODO: Add option for autoscroll
+
+    " Change back to wherever we came from.
+    wincmd p
+endfunction
+
+function! s:OnExit(job_id, data, event_type)
+    call s:Log("psql exited with code " . a:data)
+
+    if exists("s:session")
+        unlet s:session
+    endif
 endfunction
 
 function! s:CloseSession()
@@ -61,7 +80,7 @@ function! s:CloseSession()
         return
     end
 
-    call s:SendSignal("term")
+    call job#stop(s:session)
     unlet s:session
 endfunction
 
@@ -72,23 +91,20 @@ endfunction
 
 function! s:Send(text)
     if !exists("s:session")
-        echo "\nNo open session. Use :VipsqlOpenSession"
+        call s:Log("No open session. Use :VipsqlOpenSession")
         return
     end
 
-    let channel = job_getchannel(s:session)
-
-    if ch_status(channel) == "open"
-        call ch_sendraw(channel, a:text . "\n")
-    else
-        echoerr "Attempted send on a closed channel"
-    end
+    " TODO: Handle possible errors.
+    call job#send(s:session, a:text . "\n")
 endfunction
 
-function! s:SendSignal(...)
-    " Sends SIGTERM if no arguments provided
-    call job_stop(s:session, a:1)
-    echo "Signal '" . a:1 . "' sent to session"
+function! s:SendSignal(signal)
+    if job#send_signal(s:session, a:signal) == -2
+        call s:Err("Signal '" . a:signal . "' is unsupported on this platform.")
+    else
+        call s:Log("Signal '" . a:signal . "' sent to psql")
+    endif
 endfunction
 
 function! s:SendRange() range abort
