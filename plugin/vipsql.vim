@@ -58,8 +58,12 @@ function! s:OpenSession(...)
 endfunction
 
 function! s:OnOutput(job_id, data, event_type)
-    " Change to output buffer
-    exe s:bufnr . "wincmd p"
+    let curr_bufnr = bufnr('%')
+
+    " If we're not already there, change to output buffer
+    if curr_bufnr != s:bufnr
+        exe s:bufnr . "wincmd p"
+    endif
 
     " Write data
     exe "normal! GA" . a:data[0]
@@ -70,7 +74,9 @@ function! s:OnOutput(job_id, data, event_type)
     endif
 
     " Change back to wherever we came from.
-    wincmd p
+    if curr_bufnr != s:bufnr
+        wincmd p
+    endif
 endfunction
 
 function! s:OnExit(job_id, data, event_type)
