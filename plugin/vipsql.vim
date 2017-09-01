@@ -4,23 +4,23 @@ endif
 let g:loaded_vipsql = 1
 
 " Config
-if !exists("g:vipsql_psql_cmd")
-    let g:vipsql_psql_cmd = "psql"
+if !exists('g:vipsql_psql_cmd')
+    let g:vipsql_psql_cmd = 'psql'
 end
 
-if !exists("g:vipsql_shell_prompt")
-    let g:vipsql_shell_prompt = "> "
+if !exists('g:vipsql_shell_prompt')
+    let g:vipsql_shell_prompt = '> '
 end
 
-if !exists("g:vipsql_new_buffer_cmd")
-    let g:vipsql_new_buffer_cmd = "rightbelow split"
+if !exists('g:vipsql_new_buffer_cmd')
+    let g:vipsql_new_buffer_cmd = 'rightbelow split'
 end
 
-if !exists("g:vipsql_log_prefix")
-    let g:vipsql_log_prefix = "vipsql: "
+if !exists('g:vipsql_log_prefix')
+    let g:vipsql_log_prefix = 'vipsql: '
 end
 
-if !exists("g:vipsql_auto_scroll_enabled")
+if !exists('g:vipsql_auto_scroll_enabled')
     let g:vipsql_auto_scroll_enabled = 1
 end
 
@@ -33,25 +33,25 @@ function s:Err(msg)
 endfunction
 
 function! s:OpenSession(...)
-    if exists("s:session")
-        call s:Log("Session already open. Use :VipsqlCloseSession to close it.")
+    if exists('s:session')
+        call s:Log('Session already open. Use :VipsqlCloseSession to close it.')
         return
     end
 
-    let psql_args = (a:0 > 0) ? a:1 : input("psql .. > ")
+    let psql_args = (a:0 > 0) ? a:1 : input('psql .. > ')
 
-    let cmd = g:vipsql_psql_cmd . " " . psql_args
+    let cmd = g:vipsql_psql_cmd . ' ' . psql_args
 
-    if !exists("s:bufnr")
-        let s:bufnr = s:NewBuffer("__vipsql__")
+    if !exists('s:bufnr')
+        let s:bufnr = s:NewBuffer('__vipsql__')
     end
 
-    exec "autocmd BufUnload <buffer=" . s:bufnr . "> call s:OutputBufferClosed()"
+    exec 'autocmd BufUnload <buffer=' . s:bufnr . '> call s:OutputBufferClosed()'
 
     let job_opts = {
-        \"on_stdout": function("s:OnOutput"),
-        \"on_stderr": function("s:OnOutput"),
-        \"on_exit": function("s:OnExit"),
+        \'on_stdout': function('s:OnOutput'),
+        \'on_stderr': function('s:OnOutput'),
+        \'on_exit': function('s:OnExit'),
     \}
 
     let s:session = job#start(cmd, job_opts)
@@ -62,11 +62,11 @@ function! s:OnOutput(job_id, data, event_type)
 
     " If we're not already there, change to output buffer
     if curr_bufnr != s:bufnr
-        exe s:bufnr . "wincmd p"
+        exe s:bufnr . 'wincmd p'
     endif
 
     " Write data
-    exe "normal! GA" . a:data[0]
+    exe 'normal! GA' . a:data[0]
     call append(line('$'), a:data[1:])
 
     if g:vipsql_auto_scroll_enabled
@@ -80,15 +80,15 @@ function! s:OnOutput(job_id, data, event_type)
 endfunction
 
 function! s:OnExit(job_id, data, event_type)
-    call s:Log("psql exited with code " . a:data)
+    call s:Log('psql exited with code ' . a:data)
 
-    if exists("s:session")
+    if exists('s:session')
         unlet s:session
     endif
 endfunction
 
 function! s:CloseSession()
-    if !exists("s:session")
+    if !exists('s:session')
         return
     end
 
@@ -102,8 +102,8 @@ function! s:OutputBufferClosed()
 endfunction
 
 function! s:Send(text)
-    if !exists("s:session")
-        call s:Log("No open session. Use :VipsqlOpenSession")
+    if !exists('s:session')
+        call s:Log('No open session. Use :VipsqlOpenSession')
         return
     end
 
@@ -145,8 +145,7 @@ endfunction
 function! s:NewBuffer(name)
     " Splits a new buffer from current with given name, goes back to calling
     " buffer and returns bufnr.
-
-    exec g:vipsql_new_buffer_cmd . " " . a:name
+    exec g:vipsql_new_buffer_cmd . ' ' . a:name
     setlocal buftype=nofile
 
     let new_bufnr = bufnr('%')
