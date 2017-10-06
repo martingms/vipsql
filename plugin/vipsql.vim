@@ -24,6 +24,14 @@ if !exists('g:vipsql_auto_scroll_enabled')
     let g:vipsql_auto_scroll_enabled = 1
 end
 
+if !exists('g:vipsql_separator_enabled')
+    let g:vipsql_separator_enabled = 0
+end
+
+if !exists('g:vipsql_separator')
+    let g:vipsql_separator = '────────────────────'
+end
+
 function s:Log(msg)
     echomsg g:vipsql_log_prefix . a:msg
 endfunction
@@ -92,10 +100,18 @@ function! s:OutputBufferClosed()
     unlet s:bufnr
 endfunction
 
+function! s:AppendSeparator()
+    call append(line('$'), [g:vipsql_separator, ''])
+endfunction
+
 function! s:Send(text)
     if !exists('s:session')
         call s:Log('No open session. Use :VipsqlOpenSession')
         return
+    end
+
+    if g:vipsql_separator_enabled
+        call s:CallInBuffer(s:bufnr, function('s:AppendSeparator'), [])
     end
 
     " TODO: Handle possible errors.
