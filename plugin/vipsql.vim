@@ -57,26 +57,17 @@ function! s:OpenSession(...)
     let s:session = job#start(cmd, job_opts)
 endfunction
 
-function! s:OnOutput(job_id, data, event_type)
-    let curr_bufnr = bufnr('%')
-
-    " If we're not already there, change to output buffer
-    if curr_bufnr != s:bufnr
-        exe s:bufnr . 'wincmd p'
-    endif
-
-    " Write data
+function! s:AppendToCurrentBuffer(data)
     exe 'normal! GA' . a:data[0]
     call append(line('$'), a:data[1:])
 
     if g:vipsql_auto_scroll_enabled
         normal! G
     endif
+endfunction
 
-    " Change back to wherever we came from.
-    if curr_bufnr != s:bufnr
-        wincmd p
-    endif
+function! s:OnOutput(job_id, data, event_type)
+    call s:CallInBuffer(s:bufnr, function('s:AppendToCurrentBuffer'), [a:data])
 endfunction
 
 function! s:OnExit(job_id, data, event_type)
@@ -153,6 +144,22 @@ function! s:NewBuffer(name)
     wincmd p
 
     return new_bufnr
+endfunction
+
+function! s:CallInBuffer(bufnr, funcref, args)
+    let curr_bufnr = bufnr('%')
+
+    " If we're not already there, change to correct buffer
+    if curr_bufnr != a:bufnr
+        exe a:bufnr . 'wincmd p'
+    endif
+
+    call call(a:funcref, a:args)
+
+    " Change back to wherever we came from.
+    if curr_bufnr != a:bufnr
+        wincmd p
+    endif
 endfunction
 
 " Commands
