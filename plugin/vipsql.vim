@@ -167,7 +167,7 @@ function! s:CallInBuffer(bufnr, funcref, args)
 
     " If we're not already there, change to correct buffer
     if curr_bufnr != a:bufnr
-        exe a:bufnr . 'wincmd p'
+        exe bufwinnr(a:bufnr) . 'wincmd w'
     endif
 
     call call(a:funcref, a:args)
