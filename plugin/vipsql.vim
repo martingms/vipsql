@@ -114,6 +114,7 @@ function! s:Send(text)
         call s:CallInBuffer(s:bufnr, function('s:AppendSeparator'), [])
     end
 
+    call s:Log('Processing query...')
     " TODO: Handle possible errors.
     call job#send(s:session, a:text . "\n")
 endfunction
