@@ -1,4 +1,4 @@
-if exists('g:loaded_vipsql') || &cp || !has('channel')
+if exists('g:loaded_vipsql') || &cp || !(has('nvim') || has('channel'))
     finish
 endif
 let g:loaded_vipsql = 1
