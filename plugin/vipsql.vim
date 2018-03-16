@@ -16,6 +16,10 @@ if !exists('g:vipsql_new_buffer_cmd')
     let g:vipsql_new_buffer_cmd = 'rightbelow split'
 end
 
+if !exists('g:vipsql_new_buffer_config')
+    let g:vipsql_new_buffer_config = 'setlocal buftype=nofile'
+end
+
 if !exists('g:vipsql_log_prefix')
     let g:vipsql_log_prefix = 'vipsql: '
 end
@@ -154,7 +158,7 @@ function! s:NewBuffer(name)
     " Splits a new buffer from current with given name, goes back to calling
     " buffer and returns bufnr.
     exec g:vipsql_new_buffer_cmd . ' ' . a:name
-    setlocal buftype=nofile
+    exec g:vipsql_new_buffer_config
 
     let new_bufnr = bufnr('%')
 
