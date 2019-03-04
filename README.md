@@ -21,7 +21,13 @@ To use vipsql in a manner similar to psql, add something like this to your
         vim -c 'setlocal buftype=nofile | setlocal ft=sql | VipsqlOpenSession '"$*"
     }
 
-All args are redirected to the psql session, so e.g.
+Or, if you'd prefer that every session gets its own tmp-file:
+
+    vipsql() {
+        vim -c 'setlocal ft=sql | VipsqlOpenSession '"$*" $(mktemp -t vipsql.XXXXX)
+    }
+
+For both of these, args are redirected to the underlying `psql` session, so e.g.
 
     $ vipsql -d test
 
