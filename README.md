@@ -62,7 +62,7 @@ Put the following in your `.vimrc` (and customize bindings to your liking):
 " Also opens a scratch buffer where output from psql is directed.
 noremap <leader>po :VipsqlOpenSession<CR>
 
-" Terminates psql (happens automatically if the scratch buffer is closed).
+" Terminates psql (happens automatically if the output buffer is closed).
 noremap <silent> <leader>pk :VipsqlCloseSession<CR>
 
 " In normal-mode, prompts for input to psql directly.
@@ -95,15 +95,15 @@ let g:vipsql_psql_cmd = "psql"
 " The prompt to show when running `:VipsqlShell`
 let g:vipsql_shell_prompt = "> "
 
-" What `vim` command to use when opening the scratch buffer
+" What `vim` command to use when opening the output buffer
 let g:vipsql_new_buffer_cmd = "rightbelow split"
 
-" Commands executed after opening the scratch buffer
+" Commands executed after opening the output buffer
 " Chain multiple commands together with `|` like so:
 " "setlocal buftype=nofile | setlocal nowrap"
 let g:vipsql_new_buffer_config = 'setlocal buftype=nofile'
 
-" Whether or not the vipsql-buffer should automatically scroll to the bottom
+" Whether or not the output buffer should automatically scroll to the bottom
 " on new input.
 let g:vipsql_auto_scroll_enabled = 1
 
