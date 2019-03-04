@@ -101,6 +101,9 @@ let g:vipsql_new_buffer_config = 'setlocal buftype=nofile'
 " on new input.
 let g:vipsql_auto_scroll_enabled = 1
 
+" Whether or not to clear the output buffer on each send.
+let g:vipsql_auto_clear_enabled = 0
+
 " Whether or not to print a separator in the output buffer when sending a new
 " command/query to psql.
 let g:vipsql_separator_enabled = 0

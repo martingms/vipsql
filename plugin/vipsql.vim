@@ -28,6 +28,10 @@ if !exists('g:vipsql_auto_scroll_enabled')
     let g:vipsql_auto_scroll_enabled = 1
 end
 
+if !exists('g:vipsql_auto_clear_enabled')
+    let g:vipsql_auto_clear_enabled = 0
+end
+
 if !exists('g:vipsql_separator_enabled')
     let g:vipsql_separator_enabled = 0
 end
@@ -108,6 +112,10 @@ function! s:AppendSeparator()
     call append(line('$'), [g:vipsql_separator, ''])
 endfunction
 
+function! s:ClearBuffer()
+    exec 'normal! ggdG'
+endfunction
+
 function! s:Send(text)
     if !exists('s:session')
         call s:Log('No open session. Use :VipsqlOpenSession')
@@ -116,6 +124,10 @@ function! s:Send(text)
 
     if g:vipsql_separator_enabled
         call s:CallInBuffer(s:bufnr, function('s:AppendSeparator'), [])
+    end
+
+    if g:vipsql_auto_clear_enabled
+        call s:CallInBuffer(s:bufnr, function('s:ClearBuffer'), [])
     end
 
     call s:Log('Processing query...')
