@@ -111,7 +111,7 @@ let g:vipsql_auto_scroll_enabled = 1
 let g:vipsql_auto_clear_enabled = 0
 
 " Whether or not to print a separator in the output buffer when sending a new
-" command/query to psql.
+" command/query to psql. Has no effect if g:vipsql_auto_clear_enabled = 1.
 let g:vipsql_separator_enabled = 0
 
 " What that separator should look like.
