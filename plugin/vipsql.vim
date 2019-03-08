@@ -180,7 +180,17 @@ function! s:NewBuffer(name)
 endfunction
 
 function! s:CallInBuffer(bufnr, funcref, args)
+    let curr_tabpagenr = tabpagenr()
     let curr_bufnr = bufnr('%')
+
+    " We're not at the correct tab, let's find it and go there.
+    if index(tabpagebuflist(), a:bufnr) == -1
+        for i in range(tabpagenr('$'))
+            if index(tabpagebuflist(i+1), a:bufnr) > -1
+                exe i+1 . 'tabnext'
+            endif
+        endfor
+    endif
 
     " If we're not already there, change to correct buffer
     if curr_bufnr != a:bufnr
@@ -189,7 +199,12 @@ function! s:CallInBuffer(bufnr, funcref, args)
 
     call call(a:funcref, a:args)
 
-    " Change back to wherever we came from.
+    " Change back to the tab we came from
+    if curr_tabpagenr != tabpagenr()
+        tabprevious
+    endif
+
+    " Change back to the buffer we came from
     if curr_bufnr != a:bufnr
         wincmd p
     endif
