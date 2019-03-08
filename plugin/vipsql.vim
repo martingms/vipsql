@@ -113,7 +113,7 @@ function! s:AppendSeparator()
 endfunction
 
 function! s:ClearBuffer()
-    exec 'normal! ggdG'
+    normal! ggdG
 endfunction
 
 function! s:Send(text)
