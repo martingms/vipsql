@@ -169,7 +169,7 @@ endfunction
 function! s:NewBuffer(name)
     " Splits a new buffer from current with given name, goes back to calling
     " buffer and returns bufnr.
-    exec g:vipsql_new_buffer_cmd . ' ' . a:name
+    exec 'noswapfile ' . g:vipsql_new_buffer_cmd . ' ' . a:name
     exec g:vipsql_new_buffer_config
 
     let new_bufnr = bufnr('%')
