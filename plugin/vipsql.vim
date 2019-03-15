@@ -45,19 +45,19 @@ if !exists('g:vipsql_separator')
     let g:vipsql_separator = '────────────────────'
 end
 
-function! s:Show(msg)
+function! s:Show(msg) abort
     echo g:vipsql_log_prefix . a:msg
 endfunction
 
-function! s:Log(msg)
+function! s:Log(msg) abort
     echomsg g:vipsql_log_prefix . a:msg
 endfunction
 
-function! s:Err(msg)
+function! s:Err(msg) abort
     echoerr g:vipsql_log_prefix . a:msg
 endfunction
 
-function! s:OpenSession(...)
+function! s:OpenSession(...) abort
     if exists('s:session')
         call s:Log('Session already open. Use :VipsqlCloseSession to close it.')
         return
@@ -81,12 +81,12 @@ function! s:OpenSession(...)
     let s:session = s:JobStart(cmd, s:bufnr, job_opts)
 endfunction
 
-function! s:OnOutput(job, data)
+function! s:OnOutput(job, data) abort
     " Clear the 'Processing query...' message
     echo ''
 endfunction
 
-function! s:OnExit(job, status)
+function! s:OnExit(job, status) abort
     call s:Log('psql exited with code ' . a:status)
 
     if exists('s:session')
@@ -94,7 +94,7 @@ function! s:OnExit(job, status)
     endif
 endfunction
 
-function! s:CloseSession()
+function! s:CloseSession() abort
     if !exists('s:session')
         return
     end
@@ -103,12 +103,12 @@ function! s:CloseSession()
     unlet s:session
 endfunction
 
-function! s:OutputBufferClosed()
+function! s:OutputBufferClosed() abort
     call s:CloseSession()
     unlet s:bufnr
 endfunction
 
-function! s:Send(text)
+function! s:Send(text) abort
     if !exists('s:session')
         call s:Log('No open session. Use :VipsqlOpenSession')
         return
@@ -127,7 +127,7 @@ function! s:Send(text)
     call s:JobSend(s:session, a:text . "\n")
 endfunction
 
-function! s:SendSignal(signal)
+function! s:SendSignal(signal) abort
     " TODO: Fix new error codes etc
     if s:JobSignal(s:session, a:signal) == -2
         call s:Err("Signal '" . a:signal . "' is unsupported on this platform.")
@@ -149,7 +149,7 @@ endfunction
 " Utils
 "
 
-function! s:NewBuffer(name)
+function! s:NewBuffer(name) abort
     " Splits a new buffer from current with given name, goes back to calling
     " buffer and returns bufnr.
     exec 'noswapfile ' . g:vipsql_new_buffer_cmd . ' ' . a:name
@@ -162,7 +162,7 @@ function! s:NewBuffer(name)
     return new_bufnr
 endfunction
 
-function! s:AppendToBuffer(buffer, data)
+function! s:AppendToBuffer(buffer, data) abort
     if has('nvim')
         throw 'TODO'
     else
@@ -170,7 +170,7 @@ function! s:AppendToBuffer(buffer, data)
     endif
 endfunction
 
-function! s:ClearBuffer(buffer)
+function! s:ClearBuffer(buffer) abort
     if has('nvim')
         throw 'TODO'
     else
@@ -178,7 +178,7 @@ function! s:ClearBuffer(buffer)
     endif
 endfunction
 
-function! s:GetVisualSelection()
+function! s:GetVisualSelection() abort
     " Taken from http://stackoverflow.com/a/6271254
     " Why is this not a built-in Vim script function?!
     let [lnum1, col1] = getpos("'<")[1:2]
