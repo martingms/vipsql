@@ -28,6 +28,8 @@ if !exists('g:vipsql_log_prefix')
 end
 
 if !exists('g:vipsql_auto_scroll_enabled')
+    " TODO: Can this be retained somehow? Save position on Send, restore on
+    " output?
     let g:vipsql_auto_scroll_enabled = 1
 end
 
@@ -43,11 +45,15 @@ if !exists('g:vipsql_separator')
     let g:vipsql_separator = '────────────────────'
 end
 
-function s:Log(msg)
+function! s:Show(msg)
+    echo g:vipsql_log_prefix . a:msg
+endfunction
+
+function! s:Log(msg)
     echomsg g:vipsql_log_prefix . a:msg
 endfunction
 
-function s:Err(msg)
+function! s:Err(msg)
     echoerr g:vipsql_log_prefix . a:msg
 endfunction
 
@@ -72,22 +78,12 @@ function! s:OpenSession(...)
         \'on_exit': function('s:OnExit'),
     \}
 
-    let s:session = s:StartJob(cmd, s:bufnr, job_opts)
-endfunction
-
-function! s:AppendToCurrentBuffer(data)
-    "exe 'normal! GA' . a:data[0]
-    "exe 'normal! GA' . a:data
-    call setline('$', [getline('$')] + a:data)
-    "call append(line('$'), a:data[1:])
-
-    if g:vipsql_auto_scroll_enabled
-        normal! G
-    endif
+    let s:session = s:JobStart(cmd, s:bufnr, job_opts)
 endfunction
 
 function! s:OnOutput(job, data)
-    "call s:CallInBuffer(s:bufnr, function('s:AppendToCurrentBuffer'), [a:data])
+    " Clear the 'Processing query...' message
+    echo ''
 endfunction
 
 function! s:OnExit(job, status)
@@ -112,14 +108,6 @@ function! s:OutputBufferClosed()
     unlet s:bufnr
 endfunction
 
-function! s:AppendSeparator()
-    call append(line('$'), [g:vipsql_separator, ''])
-endfunction
-
-function! s:ClearBuffer()
-    normal! ggdG
-endfunction
-
 function! s:Send(text)
     if !exists('s:session')
         call s:Log('No open session. Use :VipsqlOpenSession')
@@ -127,19 +115,20 @@ function! s:Send(text)
     end
 
     if g:vipsql_separator_enabled
-        call s:CallInBuffer(s:bufnr, function('s:AppendSeparator'), [])
+        call s:AppendToBuffer(s:bufnr, [g:vipsql_separator, ''])
     end
 
     if g:vipsql_auto_clear_enabled
-        call s:CallInBuffer(s:bufnr, function('s:ClearBuffer'), [])
+        call s:ClearBuffer(s:bufnr)
     end
 
-    call s:Log('Processing query...')
+    call s:Show('Processing query...')
     " TODO: Handle possible errors.
     call s:JobSend(s:session, a:text . "\n")
 endfunction
 
 function! s:SendSignal(signal)
+    " TODO: Fix new error codes etc
     if s:JobSignal(s:session, a:signal) == -2
         call s:Err("Signal '" . a:signal . "' is unsupported on this platform.")
     else
@@ -160,19 +149,6 @@ endfunction
 " Utils
 "
 
-function! s:GetVisualSelection()
-    " Taken from http://stackoverflow.com/a/6271254
-    " Why is this not a built-in Vim script function?!
-    let [lnum1, col1] = getpos("'<")[1:2]
-    let [lnum2, col2] = getpos("'>")[1:2]
-
-    let lines = getline(lnum1, lnum2)
-    let lines[-1] = lines[-1][: col2 - (&selection ==# 'inclusive' ? 1 : 2)]
-    let lines[0] = lines[0][col1 - 1:]
-
-    return join(lines, "\n")
-endfunction
-
 function! s:NewBuffer(name)
     " Splits a new buffer from current with given name, goes back to calling
     " buffer and returns bufnr.
@@ -186,36 +162,35 @@ function! s:NewBuffer(name)
     return new_bufnr
 endfunction
 
-function! s:CallInBuffer(bufnr, funcref, args)
-    let curr_tabpagenr = tabpagenr()
-    let curr_bufnr = bufnr('%')
-
-    " We're not at the correct tab, let's find it and go there.
-    if index(tabpagebuflist(), a:bufnr) == -1
-        for i in range(tabpagenr('$'))
-            if index(tabpagebuflist(i+1), a:bufnr) > -1
-                exe i+1 . 'tabnext'
-            endif
-        endfor
-    endif
-
-    " If we're not already there, change to correct buffer
-    if curr_bufnr != a:bufnr
-        exe bufwinnr(a:bufnr) . 'wincmd w'
-    endif
-
-    call call(a:funcref, a:args)
-
-    " Change back to the tab we came from
-    if curr_tabpagenr != tabpagenr()
-        tabprevious
-    endif
-
-    " Change back to the buffer we came from
-    if curr_bufnr != a:bufnr
-        wincmd p
+function! s:AppendToBuffer(buffer, data)
+    if has('nvim')
+        throw 'TODO'
+    else
+        call appendbufline(a:buffer, '$', a:data)
     endif
 endfunction
+
+function! s:ClearBuffer(buffer)
+    if has('nvim')
+        throw 'TODO'
+    else
+        call deletebufline(a:buffer, 1, '$')
+    endif
+endfunction
+
+function! s:GetVisualSelection()
+    " Taken from http://stackoverflow.com/a/6271254
+    " Why is this not a built-in Vim script function?!
+    let [lnum1, col1] = getpos("'<")[1:2]
+    let [lnum2, col2] = getpos("'>")[1:2]
+
+    let lines = getline(lnum1, lnum2)
+    let lines[-1] = lines[-1][: col2 - (&selection ==# 'inclusive' ? 1 : 2)]
+    let lines[0] = lines[0][col1 - 1:]
+
+    return join(lines, "\n")
+endfunction
+
 
 "
 " Job control
@@ -226,7 +201,7 @@ elseif has('nvim')
     let s:jobtype = 'nvim'
 endif
 
-function! s:StartJob(cmd, out_buf, opts) abort
+function! s:JobStart(cmd, out_buf, opts) abort
     if s:jobtype == 'vim'
         let l:job  = job_start(a:cmd, {
             \ 'in_io': 'pipe',
