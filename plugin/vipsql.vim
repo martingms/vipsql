@@ -1,7 +1,18 @@
-if exists('g:loaded_vipsql') || &cp || !(has('nvim') || has('channel'))
+scriptencoding utf-8
+if exists('g:loaded_vipsql') || &cp
     finish
 endif
 let g:loaded_vipsql = 1
+
+if has('nvim')
+    let s:env = 'nvim'
+else
+    if !has('job') || !has('channel')
+        finish
+    endif
+
+    let s:env = 'vim'
+endif
 
 "
 " Config
@@ -163,18 +174,18 @@ function! s:NewBuffer(name) abort
 endfunction
 
 function! s:AppendToBuffer(buffer, data) abort
-    if has('nvim')
-        throw 'TODO'
-    else
+    if s:env ==# 'vim'
         call appendbufline(a:buffer, '$', a:data)
+    elseif s:env ==# 'nvim'
+        throw 'TODO'
     endif
 endfunction
 
 function! s:ClearBuffer(buffer) abort
-    if has('nvim')
-        throw 'TODO'
-    else
+    if s:env ==# 'vim'
         call deletebufline(a:buffer, 1, '$')
+    elseif s:env ==# 'nvim'
+        throw 'TODO'
     endif
 endfunction
 
@@ -195,14 +206,9 @@ endfunction
 "
 " Job control
 "
-if !has('nvim') && has('job') && has('channel')
-    let s:jobtype = 'vim'
-elseif has('nvim')
-    let s:jobtype = 'nvim'
-endif
 
 function! s:JobStart(cmd, out_buf, opts) abort
-    if s:jobtype == 'vim'
+    if s:env ==# 'vim'
         let l:job  = job_start(a:cmd, {
             \ 'in_io': 'pipe',
             \ 'out_io': 'buffer',
@@ -216,11 +222,11 @@ function! s:JobStart(cmd, out_buf, opts) abort
         \})
 
         if job_status(l:job) !=? 'run'
-            throw "Unable to start job!"
+            throw 'Unable to start job!'
         endif
-    elseif s:jobtype == 'nvim'
+    elseif s:env ==# 'nvim'
         " TODO
-        throw "TODO"
+        throw 'TODO'
         " TODO: on_stdout/on_stderr must first append to buffer, then call the
         " opts.on_stdout!
         "let l:job = jobstart(a:cmd, {
@@ -238,22 +244,22 @@ function! s:JobStart(cmd, out_buf, opts) abort
 endfunction
 
 function! s:JobSend(job, data) abort
-    if s:jobtype == 'vim'
+    if s:env ==# 'vim'
         call ch_sendraw(job_getchannel(a:job), a:data)
-    elseif s:jobtype == 'nvim'
+    elseif s:env ==# 'nvim'
         " TODO
         "call jobsend(a:job, a:data)
-        throw "TODO"
+        throw 'TODO'
     endif
 endfunction
 
 function! s:JobSignal(job, signal) abort
-    if s:jobtype == 'vim'
+    if s:env ==# 'vim'
         call job_stop(a:job, a:signal)
-    elseif s:jobtype == 'nvim'
+    elseif s:env ==# 'nvim'
         " TODO
-        throw "TODO"
-        "if a:signal == 'term'
+        throw 'TODO'
+        "if a:signal ==# 'term'
         "    call jobstop(a:jobid)
         "else
         "    throw "TODO: Not supported!"
