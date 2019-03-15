@@ -3,7 +3,10 @@ if exists('g:loaded_vipsql') || &cp || !(has('nvim') || has('channel'))
 endif
 let g:loaded_vipsql = 1
 
+"
 " Config
+"
+
 if !exists('g:vipsql_psql_cmd')
     let g:vipsql_psql_cmd = 'psql'
 end
@@ -55,7 +58,6 @@ function! s:OpenSession(...)
     end
 
     let psql_args = (a:0 > 0) ? a:1 : input('psql .. > ')
-
     let cmd = g:vipsql_psql_cmd . ' ' . psql_args
 
     if !exists('s:bufnr')
@@ -70,24 +72,26 @@ function! s:OpenSession(...)
         \'on_exit': function('s:OnExit'),
     \}
 
-    let s:session = job#start(cmd, job_opts)
+    let s:session = s:StartJob(cmd, s:bufnr, job_opts)
 endfunction
 
 function! s:AppendToCurrentBuffer(data)
-    exe 'normal! GA' . a:data[0]
-    call append(line('$'), a:data[1:])
+    "exe 'normal! GA' . a:data[0]
+    "exe 'normal! GA' . a:data
+    call setline('$', [getline('$')] + a:data)
+    "call append(line('$'), a:data[1:])
 
     if g:vipsql_auto_scroll_enabled
         normal! G
     endif
 endfunction
 
-function! s:OnOutput(job_id, data, event_type)
-    call s:CallInBuffer(s:bufnr, function('s:AppendToCurrentBuffer'), [a:data])
+function! s:OnOutput(job, data)
+    "call s:CallInBuffer(s:bufnr, function('s:AppendToCurrentBuffer'), [a:data])
 endfunction
 
-function! s:OnExit(job_id, data, event_type)
-    call s:Log('psql exited with code ' . a:data)
+function! s:OnExit(job, status)
+    call s:Log('psql exited with code ' . a:status)
 
     if exists('s:session')
         unlet s:session
@@ -99,7 +103,7 @@ function! s:CloseSession()
         return
     end
 
-    call job#stop(s:session)
+    call s:JobStop(s:session)
     unlet s:session
 endfunction
 
@@ -132,11 +136,11 @@ function! s:Send(text)
 
     call s:Log('Processing query...')
     " TODO: Handle possible errors.
-    call job#send(s:session, a:text . "\n")
+    call s:JobSend(s:session, a:text . "\n")
 endfunction
 
 function! s:SendSignal(signal)
-    if job#send_signal(s:session, a:signal) == -2
+    if s:JobSignal(s:session, a:signal) == -2
         call s:Err("Signal '" . a:signal . "' is unsupported on this platform.")
     else
         call s:Log("Signal '" . a:signal . "' sent to psql")
@@ -152,7 +156,10 @@ function! s:SendRange() range abort
     call setreg('"', rv, rt)
 endfunction
 
+"
 " Utils
+"
+
 function! s:GetVisualSelection()
     " Taken from http://stackoverflow.com/a/6271254
     " Why is this not a built-in Vim script function?!
@@ -208,6 +215,79 @@ function! s:CallInBuffer(bufnr, funcref, args)
     if curr_bufnr != a:bufnr
         wincmd p
     endif
+endfunction
+
+"
+" Job control
+"
+if !has('nvim') && has('job') && has('channel')
+    let s:jobtype = 'vim'
+elseif has('nvim')
+    let s:jobtype = 'nvim'
+endif
+
+function! s:StartJob(cmd, out_buf, opts) abort
+    if s:jobtype == 'vim'
+        let l:job  = job_start(a:cmd, {
+            \ 'in_io': 'pipe',
+            \ 'out_io': 'buffer',
+            \ 'err_io': 'buffer',
+            \ 'out_buf': a:out_buf,
+            \ 'err_buf': a:out_buf,
+            \ 'out_cb': a:opts.on_stdout,
+            \ 'err_cb': a:opts.on_stderr,
+            \ 'exit_cb': a:opts.on_exit,
+            \ 'mode': 'raw',
+        \})
+
+        if job_status(l:job) !=? 'run'
+            throw "Unable to start job!"
+        endif
+    elseif s:jobtype == 'nvim'
+        " TODO
+        throw "TODO"
+        " TODO: on_stdout/on_stderr must first append to buffer, then call the
+        " opts.on_stdout!
+        "let l:job = jobstart(a:cmd, {
+        "    \ 'on_stdout': function('s:on_stdout'),
+        "    \ 'on_stderr': function('s:on_stderr'),
+        "    \ 'on_exit': a:opts.on_exit,
+        "\})
+
+        "if l:job <= 0
+        "    throw "Unable to start job!"
+        "endif
+    endif
+
+    return l:job
+endfunction
+
+function! s:JobSend(job, data) abort
+    if s:jobtype == 'vim'
+        call ch_sendraw(job_getchannel(a:job), a:data)
+    elseif s:jobtype == 'nvim'
+        " TODO
+        "call jobsend(a:job, a:data)
+        throw "TODO"
+    endif
+endfunction
+
+function! s:JobSignal(job, signal) abort
+    if s:jobtype == 'vim'
+        call job_stop(a:job, a:signal)
+    elseif s:jobtype == 'nvim'
+        " TODO
+        throw "TODO"
+        "if a:signal == 'term'
+        "    call jobstop(a:jobid)
+        "else
+        "    throw "TODO: Not supported!"
+        "endif
+    endif
+endfunction
+
+function! s:JobStop(job) abort
+    call s:JobSignal(a:job, 'term')
 endfunction
 
 " Commands
