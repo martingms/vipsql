@@ -84,8 +84,7 @@ function! s:OpenSession(...) abort
     exec 'autocmd BufUnload <buffer=' . s:bufnr . '> call s:OutputBufferClosed()'
 
     let job_opts = {
-        \'on_stdout': function('s:OnOutput'),
-        \'on_stderr': function('s:OnOutput'),
+        \'on_output': function('s:OnOutput'),
         \'on_exit': function('s:OnExit'),
     \}
 
@@ -174,10 +173,16 @@ function! s:NewBuffer(name) abort
 endfunction
 
 function! s:AppendToBuffer(buffer, data) abort
+    if len(a:data) == 0
+        return
+    endif
+
     if s:env ==# 'vim'
         call appendbufline(a:buffer, '$', a:data)
     elseif s:env ==# 'nvim'
-        throw 'TODO'
+        let l:last_line = nvim_buf_get_lines(a:buffer, -2, -2, 1)
+        let l:to_append = [get(l:last_line, 0, '') . a:data[0]] + a:data[1:]
+        call nvim_buf_set_lines(a:buffer, -2, -1, 1, l:to_append)
     endif
 endfunction
 
@@ -185,7 +190,7 @@ function! s:ClearBuffer(buffer) abort
     if s:env ==# 'vim'
         call deletebufline(a:buffer, 1, '$')
     elseif s:env ==# 'nvim'
-        throw 'TODO'
+        call nvim_buf_set_lines(a:buffer, 0, -1, 1, [])
     endif
 endfunction
 
@@ -206,38 +211,60 @@ endfunction
 "
 " Job control
 "
+"
+
+" TODO
+" function! s:NvimOnOutput(callback, jobid, data, event) abort
+function! s:NvimOutputHandler(opts, jobid, data, event) abort
+    call s:AppendToBuffer(s:bufnr, a:data)
+
+    if has_key(a:opts, 'on_output')
+        call a:opts.on_output(a:jobid, a:data)
+    endif
+endfunction
 
 function! s:JobStart(cmd, out_buf, opts) abort
     if s:env ==# 'vim'
-        let l:job  = job_start(a:cmd, {
+        let l:job_opts = {
             \ 'in_io': 'pipe',
             \ 'out_io': 'buffer',
             \ 'err_io': 'buffer',
             \ 'out_buf': a:out_buf,
             \ 'err_buf': a:out_buf,
-            \ 'out_cb': a:opts.on_stdout,
-            \ 'err_cb': a:opts.on_stderr,
-            \ 'exit_cb': a:opts.on_exit,
             \ 'mode': 'raw',
-        \})
+        \}
+
+        if has_key(a:opts, 'on_output')
+            let l:job_opts['out_cb'] = a:opts.on_output
+        endif
+
+        if has_key(a:opts, 'on_exit')
+            let l:job_opts['exit_cb'] = a:opts.on_exit
+        endif
+
+        let l:job = job_start(a:cmd, l:job_opts)
 
         if job_status(l:job) !=? 'run'
-            throw 'Unable to start job!'
+            call s:Err('Unable to start job!')
+            return -1
         endif
-    elseif s:env ==# 'nvim'
-        " TODO
-        throw 'TODO'
-        " TODO: on_stdout/on_stderr must first append to buffer, then call the
-        " opts.on_stdout!
-        "let l:job = jobstart(a:cmd, {
-        "    \ 'on_stdout': function('s:on_stdout'),
-        "    \ 'on_stderr': function('s:on_stderr'),
-        "    \ 'on_exit': a:opts.on_exit,
-        "\})
 
-        "if l:job <= 0
-        "    throw "Unable to start job!"
-        "endif
+    elseif s:env ==# 'nvim'
+        let l:job_opts = {
+            \ 'on_stdout': function('s:NvimOutputHandler', [a:opts]),
+            \ 'on_stderr': function('s:NvimOutputHandler', [a:opts]),
+        \}
+
+        if has_key(a:opts, 'on_exit')
+            let l:job_opts['on_exit'] = a:opts.on_exit
+        endif
+
+        let l:job = jobstart(a:cmd, l:job_opts)
+
+        if l:job <= 0
+            call s:Err("Unable to start job!")
+            return -1
+        endif
     endif
 
     return l:job
@@ -247,9 +274,7 @@ function! s:JobSend(job, data) abort
     if s:env ==# 'vim'
         call ch_sendraw(job_getchannel(a:job), a:data)
     elseif s:env ==# 'nvim'
-        " TODO
-        "call jobsend(a:job, a:data)
-        throw 'TODO'
+        call jobsend(a:job, a:data)
     endif
 endfunction
 
@@ -257,13 +282,11 @@ function! s:JobSignal(job, signal) abort
     if s:env ==# 'vim'
         call job_stop(a:job, a:signal)
     elseif s:env ==# 'nvim'
-        " TODO
-        throw 'TODO'
-        "if a:signal ==# 'term'
-        "    call jobstop(a:jobid)
-        "else
-        "    throw "TODO: Not supported!"
-        "endif
+        if a:signal ==# 'term'
+            call jobstop(a:jobid)
+        else
+            call s:Err("Only SIGTERM supported in nvim")
+        endif
     endif
 endfunction
 
