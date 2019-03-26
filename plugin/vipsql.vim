@@ -91,7 +91,7 @@ function! s:OpenSession(...) abort
 
     try
         let s:session = s:JobStart(cmd, s:bufnr, job_opts)
-    catch /FailedJobStart/
+    catch /vipsql:FailedJobStart/
         call s:Err("Unable to start psql with cmd \"" . cmd . "\"")
     endtry
 endfunction
@@ -259,7 +259,7 @@ function! s:JobStart(cmd, out_buf, opts) abort
         let l:job = job_start(a:cmd, l:job_opts)
 
         if job_status(l:job) !=? 'run'
-            throw "FailedJobStart"
+            throw "vipsql:FailedJobStart"
         endif
 
     elseif s:env ==# 'nvim'
@@ -270,7 +270,7 @@ function! s:JobStart(cmd, out_buf, opts) abort
         \})
 
         if l:job <= 0
-            throw "FailedJobStart"
+            throw "vipsql:FailedJobStart"
         endif
     endif
 
@@ -292,12 +292,13 @@ function! s:JobSignal(job, signal) abort
         if a:signal ==# 'term'
             call jobstop(a:job)
         else
-            call s:Err("Only SIGTERM supported in nvim")
+            throw "vipsql:UnsupportedSignal"
         endif
     endif
 endfunction
 
 function! s:JobStop(job) abort
+    " Will not throw, as both {n,}vim supports SIGTERM
     call s:JobSignal(a:job, 'term')
 endfunction
 
