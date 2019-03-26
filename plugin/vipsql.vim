@@ -259,7 +259,7 @@ function! s:JobStart(cmd, out_buf, opts) abort
         let l:job = job_start(a:cmd, l:job_opts)
 
         if job_status(l:job) !=? 'run'
-            throw "vipsql:FailedJobStart"
+            throw 'vipsql:JobStartFailed'
         endif
 
     elseif s:env ==# 'nvim'
@@ -270,7 +270,7 @@ function! s:JobStart(cmd, out_buf, opts) abort
         \})
 
         if l:job <= 0
-            throw "vipsql:FailedJobStart"
+            throw 'vipsql:JobStartFailed'
         endif
     endif
 
@@ -292,7 +292,7 @@ function! s:JobSignal(job, signal) abort
         if a:signal ==# 'term'
             call jobstop(a:job)
         else
-            throw "vipsql:UnsupportedSignal"
+            throw 'vipsql:UnsupportedSignal'
         endif
     endif
 endfunction
