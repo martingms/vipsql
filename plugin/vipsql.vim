@@ -183,10 +183,17 @@ function! s:AppendToBuffer(buffer, data) abort
     endif
 
     if s:env ==# 'vim'
-        call appendbufline(a:buffer, '$', a:data)
+        let l:last_line = getbufline(a:buffer, '$')
     elseif s:env ==# 'nvim'
-        let l:last_line = nvim_buf_get_lines(a:buffer, -2, -2, 1)
-        let l:to_append = [get(l:last_line, 0, '') . a:data[0]] + a:data[1:]
+        let l:last_line = nvim_buf_get_lines(a:buffer, -2, -1, 1)
+    endif
+
+    " Splice the current last line with the first line to append
+    let l:to_append = [get(l:last_line, 0, '') . a:data[0]] + a:data[1:]
+
+    if s:env ==# 'vim'
+        call appendbufline(a:buffer, '$', l:to_append)
+    elseif s:env ==# 'nvim'
         call nvim_buf_set_lines(a:buffer, -2, -1, 1, l:to_append)
     endif
 endfunction
