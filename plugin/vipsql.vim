@@ -138,17 +138,16 @@ function! s:Send(text) abort
     end
 
     call s:Show('Processing query...')
-    " TODO: Handle possible errors.
     call s:JobSend(s:session, a:text . "\n")
 endfunction
 
 function! s:SendSignal(signal) abort
-    " TODO: Fix new error codes etc
-    if s:JobSignal(s:session, a:signal) == -2
-        call s:Err("Signal '" . a:signal . "' is unsupported on this platform.")
-    else
+    try
+        call s:JobSignal(s:session, a:signal)
         call s:Log("Signal '" . a:signal . "' sent to psql")
-    endif
+    catch /vipsql:UnsupportedSignal/
+        call s:Err("Signal '" . a:signal . "' is unsupported on this platform.")
+    endtry
 endfunction
 
 function! s:SendRange() range abort
