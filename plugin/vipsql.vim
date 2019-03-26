@@ -39,12 +39,6 @@ if !exists('g:vipsql_log_prefix')
     let g:vipsql_log_prefix = 'vipsql: '
 end
 
-if !exists('g:vipsql_auto_scroll_enabled')
-    " TODO: Can this be retained somehow? Save position on Send, restore on
-    " output?
-    let g:vipsql_auto_scroll_enabled = 1
-end
-
 if !exists('g:vipsql_auto_clear_enabled')
     let g:vipsql_auto_clear_enabled = 0
 end
