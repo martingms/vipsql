@@ -124,7 +124,7 @@ function! s:Send(text) abort
     end
 
     if g:vipsql_separator_enabled
-        call s:AppendToBuffer(s:bufnr, [g:vipsql_separator, ''])
+        call s:AppendToBuffer(s:bufnr, ['', g:vipsql_separator, ''])
     end
 
     if g:vipsql_auto_clear_enabled
@@ -185,7 +185,8 @@ function! s:AppendToBuffer(buffer, data) abort
     let l:to_append = [get(l:last_line, 0, '') . a:data[0]] + a:data[1:]
 
     if s:env ==# 'vim'
-        call appendbufline(a:buffer, '$', l:to_append)
+        call setbufline(a:buffer, '$', l:to_append[0])
+        call appendbufline(a:buffer, '$', l:to_append[1:])
     elseif s:env ==# 'nvim'
         call nvim_buf_set_lines(a:buffer, -2, -1, 1, l:to_append)
     endif
