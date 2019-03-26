@@ -75,8 +75,8 @@ function! s:OpenSession(...) abort
         return
     end
 
-    let psql_args = (a:0 > 0) ? a:1 : input('psql .. > ')
-    let cmd = g:vipsql_psql_cmd . ' ' . psql_args
+    let l:psql_args = (a:0 > 0) ? a:1 : input('psql .. > ')
+    let l:cmd = g:vipsql_psql_cmd . ' ' . l:psql_args
 
     if !exists('s:bufnr')
         let s:bufnr = s:NewBuffer('__vipsql__')
@@ -84,15 +84,15 @@ function! s:OpenSession(...) abort
 
     exec 'autocmd BufUnload <buffer=' . s:bufnr . '> call s:OutputBufferClosed()'
 
-    let job_opts = {
+    let l:job_opts = {
         \'on_output': function('s:OnOutput'),
         \'on_exit': function('s:OnExit'),
     \}
 
     try
-        let s:session = s:JobStart(cmd, s:bufnr, job_opts)
+        let s:session = s:JobStart(l:cmd, s:bufnr, l:job_opts)
     catch /vipsql:FailedJobStart/
-        call s:Err("Unable to start psql with cmd \"" . cmd . "\"")
+        call s:Err("Unable to start psql with cmd \"" . l:cmd . "\"")
     endtry
 endfunction
 
@@ -151,12 +151,12 @@ function! s:SendSignal(signal) abort
 endfunction
 
 function! s:SendRange() range abort
-    let rv = getreg('"')
-    let rt = getregtype('"')
+    let l:rv = getreg('"')
+    let l:rt = getregtype('"')
     sil exe a:firstline . ',' . a:lastline . 'yank'
 
     call s:Send(@")
-    call setreg('"', rv, rt)
+    call setreg('"', l:rv, l:rt)
 endfunction
 
 "
@@ -169,11 +169,11 @@ function! s:NewBuffer(name) abort
     exec 'noswapfile ' . g:vipsql_new_buffer_cmd . ' ' . a:name
     exec g:vipsql_new_buffer_config
 
-    let new_bufnr = bufnr('%')
+    let l:new_bufnr = bufnr('%')
 
     wincmd p
 
-    return new_bufnr
+    return l:new_bufnr
 endfunction
 
 function! s:AppendToBuffer(buffer, data) abort
@@ -208,14 +208,14 @@ endfunction
 function! s:GetVisualSelection() abort
     " Taken from http://stackoverflow.com/a/6271254
     " Why is this not a built-in Vim script function?!
-    let [lnum1, col1] = getpos("'<")[1:2]
-    let [lnum2, col2] = getpos("'>")[1:2]
+    let [l:lnum1, l:col1] = getpos("'<")[1:2]
+    let [l:lnum2, l:col2] = getpos("'>")[1:2]
 
-    let lines = getline(lnum1, lnum2)
-    let lines[-1] = lines[-1][: col2 - (&selection ==# 'inclusive' ? 1 : 2)]
-    let lines[0] = lines[0][col1 - 1:]
+    let l:lines = getline(l:lnum1, l:lnum2)
+    let l:lines[-1] = l:lines[-1][: l:col2 - (&selection ==# 'inclusive' ? 1 : 2)]
+    let l:lines[0] = l:lines[0][l:col1 - 1:]
 
-    return join(lines, "\n")
+    return join(l:lines, "\n")
 endfunction
 
 "
