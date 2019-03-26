@@ -89,7 +89,11 @@ function! s:OpenSession(...) abort
         \'on_exit': function('s:OnExit'),
     \}
 
-    let s:session = s:JobStart(cmd, s:bufnr, job_opts)
+    try
+        let s:session = s:JobStart(cmd, s:bufnr, job_opts)
+    catch /FailedJobStart/
+        call s:Err("Unable to start psql with cmd \"" . cmd . "\"")
+    endtry
 endfunction
 
 function! s:OnOutput(job, data) abort
@@ -220,6 +224,12 @@ function! s:NvimOutputHandler(opts, jobid, data, event) abort
     endif
 endfunction
 
+function! s:NvimExitHandler(opts, jobid, status, event) abort
+    if has_key(a:opts, 'on_exit')
+        call a:opts.on_exit(a:jobid, a:status)
+    endif
+endfunction
+
 function! s:JobStart(cmd, out_buf, opts) abort
     if s:env ==# 'vim'
         let l:job_opts = {
@@ -233,6 +243,7 @@ function! s:JobStart(cmd, out_buf, opts) abort
 
         if has_key(a:opts, 'on_output')
             let l:job_opts['out_cb'] = a:opts.on_output
+            let l:job_opts['err_cb'] = a:opts.on_output
         endif
 
         if has_key(a:opts, 'on_exit')
@@ -242,25 +253,18 @@ function! s:JobStart(cmd, out_buf, opts) abort
         let l:job = job_start(a:cmd, l:job_opts)
 
         if job_status(l:job) !=? 'run'
-            call s:Err('Unable to start job!')
-            return -1
+            throw "FailedJobStart"
         endif
 
     elseif s:env ==# 'nvim'
-        let l:job_opts = {
+        let l:job = jobstart(a:cmd, {
             \ 'on_stdout': function('s:NvimOutputHandler', [a:opts]),
             \ 'on_stderr': function('s:NvimOutputHandler', [a:opts]),
-        \}
-
-        if has_key(a:opts, 'on_exit')
-            let l:job_opts['on_exit'] = a:opts.on_exit
-        endif
-
-        let l:job = jobstart(a:cmd, l:job_opts)
+            \ 'on_exit': function('s:NvimExitHandler', [a:opts]),
+        \})
 
         if l:job <= 0
-            call s:Err("Unable to start job!")
-            return -1
+            throw "FailedJobStart"
         endif
     endif
 
