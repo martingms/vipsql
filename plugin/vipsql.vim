@@ -1,4 +1,5 @@
 scriptencoding utf-8
+
 if exists('g:loaded_vipsql') || &cp
     finish
 endif
@@ -7,7 +8,7 @@ let g:loaded_vipsql = 1
 if has('nvim')
     let s:env = 'nvim'
 else
-    if !has('job') || !has('channel')
+    if !has('job') || !has('channel') || v:version < 800
         finish
     endif
 
@@ -207,14 +208,10 @@ function! s:GetVisualSelection() abort
     return join(lines, "\n")
 endfunction
 
-
 "
 " Job control
 "
-"
 
-" TODO
-" function! s:NvimOnOutput(callback, jobid, data, event) abort
 function! s:NvimOutputHandler(opts, jobid, data, event) abort
     call s:AppendToBuffer(s:bufnr, a:data)
 
@@ -283,7 +280,7 @@ function! s:JobSignal(job, signal) abort
         call job_stop(a:job, a:signal)
     elseif s:env ==# 'nvim'
         if a:signal ==# 'term'
-            call jobstop(a:jobid)
+            call jobstop(a:job)
         else
             call s:Err("Only SIGTERM supported in nvim")
         endif
