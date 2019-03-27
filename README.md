@@ -103,10 +103,6 @@ let g:vipsql_new_buffer_cmd = "rightbelow split"
 " "setlocal buftype=nofile | setlocal nowrap"
 let g:vipsql_new_buffer_config = 'setlocal buftype=nofile'
 
-" Whether or not the output buffer should automatically scroll to the bottom
-" on new input.
-let g:vipsql_auto_scroll_enabled = 1
-
 " Whether or not to clear the output buffer on each send.
 let g:vipsql_auto_clear_enabled = 0
 
