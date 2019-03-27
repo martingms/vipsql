@@ -212,7 +212,9 @@ endfunction
 "
 
 function! s:NvimOutputHandler(opts, jobid, data, event) abort
-    call s:AppendToBuffer(s:bufnr, a:data)
+    if exists('s:bufnr')
+        call s:AppendToBuffer(s:bufnr, a:data)
+    endif
 
     if has_key(a:opts, 'on_output')
         call a:opts.on_output(a:jobid, a:data)
