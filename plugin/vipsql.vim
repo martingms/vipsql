@@ -5,9 +5,11 @@ if exists('g:loaded_vipsql') || &cp
 endif
 let g:loaded_vipsql = 1
 
+" Any nvim version is supported (I think)
 if has('nvim')
     let s:env = 'nvim'
 else
+    " But vim needs to be compiled with job and channel
     if !has('job') || !has('channel') || v:version < 800
         finish
     endif
@@ -76,7 +78,7 @@ function! s:OpenSession(...) abort
         let s:bufnr = s:NewBuffer('__vipsql__')
     end
 
-    exec 'autocmd BufUnload <buffer=' . s:bufnr . '> call s:OutputBufferClosed()'
+    exec 'autocmd BufUnload <buffer=' . s:bufnr . '> call s:OnOutputBufferClosed()'
 
     let l:job_opts = {
         \'on_output': function('s:OnOutput'),
@@ -86,7 +88,7 @@ function! s:OpenSession(...) abort
     try
         let s:session = s:JobStart(l:cmd, s:bufnr, l:job_opts)
     catch /vipsql:FailedJobStart/
-        call s:Err("Unable to start psql with cmd \"" . l:cmd . "\"")
+        call s:Err("Unable to start psql with command \"" . l:cmd . "\"")
     endtry
 endfunction
 
@@ -112,7 +114,7 @@ function! s:CloseSession() abort
     unlet s:session
 endfunction
 
-function! s:OutputBufferClosed() abort
+function! s:OnOutputBufferClosed() abort
     call s:CloseSession()
     unlet s:bufnr
 endfunction
