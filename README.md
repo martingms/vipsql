@@ -27,7 +27,17 @@ Or, if you'd prefer that every session gets its own tmp-file:
         vim -c 'setlocal ft=sql | VipsqlOpenSession '"$*" $(mktemp -t vipsql.XXXXX)
     }
 
-For both of these, args are redirected to the underlying `psql` session, so e.g.
+Or perhaps always using the same file for the same provided args, so you can
+reuse queries from previous sessions:
+
+    vipsql() {
+        local dir=${XDG_DATA_HOME:-"$HOME/.local/share"}"/vipsql/"
+        local file=$(echo "$*" | tr -dc "[:alpha:]-=")".sql"
+        mkdir -p "$dir"
+        vim -c 'setlocal ft=sql | VipsqlOpenSession '"$*" "$dir$file"
+    }
+
+For all of these, args are redirected to the underlying `psql` session, so e.g.
 
     $ vipsql -d test
 
